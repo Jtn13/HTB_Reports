@@ -55,10 +55,6 @@ a {
   text-decoration: none;
 }
 
-a:hover {
-
-}
-
 /* --- Layout --- */
 .container {
   width: 100%;
@@ -280,6 +276,11 @@ footer p {
   .site-title {
     font-size: var(--fs-xl);
   }
+  .linkedin {
+    font-size: var(--fs-xl);
+    color:#0A66C2;
+  }
+  .linkedin.content {color:#0A66C2;}
 }
 
 /* =============================================

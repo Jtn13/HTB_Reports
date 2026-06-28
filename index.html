@@ -13,7 +13,10 @@
 
   <header>
     <div class="container">
-      <h1 class="site-title">HTB Reports</h1>
+      <div style="display: flex;">
+        <h1 class="site-title" style="margin-right:auto;">HTB Reports</h1>
+        <a target="_blank" href="https://www.linkedin.com/in/jack-nardi/"><h1 class="linkedin" style="color:#0A66C2;">LinkedIn</h1></a>
+      </div>
       <p class="site-subtitle">Hack The Box challenge writeups and notes</p>
     </div>
   </header>
@@ -35,19 +38,18 @@
 
         <!-- Example card 1 -->
         <article class="report-card" data-category="machine">
-          <a href="reports/lame.html">
+          <a href="reports/meow.html">
             <div class="card-meta">
               <span class="badge badge-machine">Machine</span>
-              <span class="difficulty easy">Easy</span>
+              <span class="difficulty easy">Very Easy</span>
             </div>
-            <h2 class="card-title"></h2>
-            <p class="card-desc">Linux machine exploiting a Samba vulnerability for unauthenticated remote code execution.</p>
+            <h2 class="card-title">Meow</h2>
+            <p class="card-desc">Linux machine exploiting an exposed Telnet service withe defaul credentials.</p>
             <div class="card-tags">
               <span class="tag">Linux</span>
-              <span class="tag">Samba</span>
-              <span class="tag">CVE-2007-2447</span>
+              <span class="tag">Telnet</span>
             </div>
-            <span class="card-date">2025-06-01</span>
+            <span class="card-date">2025-06-28</span>
           </a>
         </article>
       </div>
@@ -56,7 +58,7 @@
 
   <footer>
     <div class="container">
-      <p>All content is for educational purposes. Findings are from retired machines and public challenges.</p>
+      <p>All content is for educational purposes. Any testing or exploitation is in an approved testing enviornment</p>
     </div>
   </footer>
 

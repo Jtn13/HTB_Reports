@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTB Reports</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <h1 class="site-title">HTB Reports</h1>
+      <p class="site-subtitle">Hack The Box challenge writeups and notes</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- Filter bar (optional — remove if not needed) -->
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" onclick="filterCards(this, 'all')">All</button>
+        <button class="filter-btn" onclick="filterCards(this, 'machine')">Machines</button>
+        <button class="filter-btn" onclick="filterCards(this, 'challenge')">Challenges</button>
+        <button class="filter-btn" onclick="filterCards(this, 'fortress')">Fortresses</button>
+      </div>
+
+      <!-- Report cards -->
+      <div class="report-grid" id="reportGrid">
+
+        <!-- Example card 1 -->
+        <article class="report-card" data-category="machine">
+          <div class="card-meta">
+            <span class="badge badge-machine">Machine</span>
+            <span class="difficulty easy">Easy</span>
+          </div>
+          <h2 class="card-title"><a href="reports/lame.html">Lame</a></h2>
+          <p class="card-desc">Linux machine exploiting a Samba vulnerability for unauthenticated remote code execution.</p>
+          <div class="card-tags">
+            <span class="tag">Linux</span>
+            <span class="tag">Samba</span>
+            <span class="tag">CVE-2007-2447</span>
+          </div>
+          <span class="card-date">2025-06-01</span>
+        </article>
+
+        <!-- Example card 2 -->
+        <article class="report-card" data-category="machine">
+          <div class="card-meta">
+            <span class="badge badge-machine">Machine</span>
+            <span class="difficulty medium">Medium</span>
+          </div>
+          <h2 class="card-title"><a href="reports/forest.html">Forest</a></h2>
+          <p class="card-desc">Active Directory machine requiring AS-REP roasting and DCSync to gain domain admin.</p>
+          <div class="card-tags">
+            <span class="tag">Windows</span>
+            <span class="tag">Active Directory</span>
+            <span class="tag">Kerberos</span>
+          </div>
+          <span class="card-date">2025-06-10</span>
+        </article>
+
+        <!-- Example card 3 -->
+        <article class="report-card" data-category="challenge">
+          <div class="card-meta">
+            <span class="badge badge-challenge">Challenge</span>
+            <span class="difficulty easy">Easy</span>
+          </div>
+          <h2 class="card-title"><a href="reports/rev-exatlon.html">Exatlon</a></h2>
+          <p class="card-desc">Reverse engineering challenge involving a custom encoding scheme applied to a flag comparison.</p>
+          <div class="card-tags">
+            <span class="tag">Reversing</span>
+            <span class="tag">Python</span>
+          </div>
+          <span class="card-date">2025-06-18</span>
+        </article>
+
+        <!-- Example card 4 -->
+        <article class="report-card" data-category="machine">
+          <div class="card-meta">
+            <span class="badge badge-machine">Machine</span>
+            <span class="difficulty hard">Hard</span>
+          </div>
+          <h2 class="card-title"><a href="reports/reel.html">Reel</a></h2>
+          <p class="card-desc">Windows machine using a phishing vector via RTF exploit, followed by ACL abuse for privilege escalation.</p>
+          <div class="card-tags">
+            <span class="tag">Windows</span>
+            <span class="tag">Phishing</span>
+            <span class="tag">ACL Abuse</span>
+          </div>
+          <span class="card-date">2025-06-22</span>
+        </article>
+
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>All content is for educational purposes. Findings are from retired machines and public challenges.</p>
+    </div>
+  </footer>
+
+  <script>
+    function filterCards(btn, category) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.report-card').forEach(card => {
+        card.style.display = (category === 'all' || card.dataset.category === category) ? 'flex' : 'none';
+      });
+    }
+  </script>
+
+</body>
+</html>

